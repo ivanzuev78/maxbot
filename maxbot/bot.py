@@ -5,12 +5,13 @@ from typing import Optional
 from .types import InlineKeyboardMarkup
 
 class Bot:
-    BASE_URL = "https://botapi.max.ru"
+    BASE_URL = "https://platform-api.max.ru"
 
-    def __init__(self, token: str):
+    def __init__(self, token: str, base_url: str = BASE_URL, httpx_kwargs: dict | None = None):
         self.token = token
-        self.base_url = self.BASE_URL
-        self.client = httpx.AsyncClient()
+        self.base_url = base_url
+        httpx_kwargs = httpx_kwargs or {}
+        self.client = httpx.AsyncClient(**httpx_kwargs)
 
     async def _request(self, method: str, path: str, params=None, json=None, headers=None):
         if params is None:

@@ -126,6 +126,9 @@ class Bot:
     async def delete_message(self, message_id: str):
         return await self._request("DELETE", "/messages", params={"message_id": message_id})
 
+    async def get_message(self, message_id: str):
+        return await self._request("GET", "/messages", params={"message_id": message_id})
+
     async def upload_file(self, file_path: str, media_type: str) -> dict:
     # 1. Запрашиваем upload URL и токен
         resp = await self._request("POST", "/uploads", params={"type": media_type})

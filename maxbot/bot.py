@@ -157,7 +157,7 @@ class Bot:
                         file_token = upload_json.get("token")
                     except ValueError:
                         raise ValueError("MAX API вернул некорректный JSON для image/file")
-                    
+
                 if media_type == "image":
                     result = upload_resp.json()
                     if "photos" in result and result["photos"]:
@@ -312,14 +312,16 @@ class Bot:
             resp = await client.head(url)
             return resp.headers.get("content-type")
 
+    async def pin_message(self, chat_id: int, message_id: str, notify: bool = True):
+        """
+        В Максе только одно сообщение  может быть закреплено
+        """
+        return await self._request(
+            "PUT", f"/chats/{chat_id}/pin", params={"message_id": message_id, "notify": notify}
+        )
 
-
-
-
-
-
-
-
-
-
-
+    async def unpin_message(self, chat_id: int):
+        """
+        Убирает закрепленное сообщение в чате (если такое есть).
+        """
+        return await self._request("DELETE", f"/chats/{chat_id}/pin")

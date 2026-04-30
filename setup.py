@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="umaxbot",
-    version="0.2.3",
+    name="zumaxbot",
+    version="0.2.4",
     description="Async framework for building bots for MAX messenger (aiogram-style)",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

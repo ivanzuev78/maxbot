@@ -269,48 +269,55 @@ class Bot:
         ]
 
         # 3. Ретраи с backoff (улучшил сразу)
-        delay = 2
+        delay = 0
         resp = None
         for attempt in range(1, max_retries + 1):
-            resp = await self.send_message(chat_id, user_id, text, reply_markup, notify, format, attachments)
-
-            if resp.status_code < 400:
-                return resp
-
-
-            if (
-                "attachment.not.ready" in resp.text
-                or "not.processed" in resp.text
-                ):
+            try:
+                resp = await self.send_message(chat_id, user_id, text, reply_markup, notify, format, attachments)
+            except Exception as e:
                 print(f"Попытка {attempt}: файл обрабатывается, ждём {delay} сек...")
                 await asyncio.sleep(delay)
-                delay *= 2
+                delay += 2
                 continue
 
             break
 
         return resp
 
-    async def download_media(self, url: str, dest_path: str = None):
+    async def download_media(self, url: str, file_or_path: str = None):
         """
         Скачивает медиафайл по прямой ссылке (url) и сохраняет на диск.
         Если dest_path не указан — берётся имя файла из url.
         """
-        if dest_path is None:
+
+        if file_or_path is None:
             filename = url.split("?")[0].split("/")[-1] or "file.bin"
             ext = mimetypes.guess_extension((await self._get_content_type(url)) or "")
             if ext and not filename.endswith(ext):
                 filename += ext
-            dest_path = filename
+            file_or_path = filename
 
-        async with httpx.AsyncClient() as client:
-            async with client.stream("GET", url, timeout=120) as response:
-                response.raise_for_status()
-                with open(dest_path, "wb") as f:
+        if isinstance(file_or_path, (str, bytes)):
+            close_file = True
+            file = open(file_or_path, "wb")
+        else:
+            close_file = False
+            file = file_or_path
+
+        try:
+            async with httpx.AsyncClient() as client:
+                async with client.stream("GET", url, timeout=120) as response:
+                    response.raise_for_status()
+                    # with open(dest_path, "wb") as f:
                     async for chunk in response.aiter_bytes(1024 * 1024):
-                        f.write(chunk)
-        print(f"[Bot] Файл скачан: {dest_path}")
-        return dest_path
+                        file.write(chunk)
+        finally:
+            if close_file:
+                file.close()
+
+        return file_or_path
+
+
 
     async def _get_content_type(self, url):
         async with httpx.AsyncClient() as client:
